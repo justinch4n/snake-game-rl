@@ -42,6 +42,15 @@ y = GRID_TOP + row_index * STEP # Calculate the y position of the snake head
 
 snake_head = pygame.Rect(x, y, SNAKE_SIZE, SNAKE_SIZE)
 direction = None
+# snake is a list of rectangles
+snake = [snake_head]
+# Add 3 more rectangles to the snake
+snake_length = 1
+while snake_length < 3:
+    snake_length += 1
+    x = GRID_LEFT + col_index * STEP # Calculate the x position of the snake head
+    y = GRID_TOP + row_index * STEP # Calculate the y position of the snake head
+    snake.append(pygame.Rect(x, y, SNAKE_SIZE, SNAKE_SIZE))
 
 # Game loop
 run = True
@@ -62,21 +71,32 @@ while run:
             elif e.key == pygame.K_DOWN:
                 direction = "DOWN"
     
+    head = snake[0]
+    newX = head.x
+    newY = head.y
+
+    # Update the head position based on the direction
     if direction == "LEFT":
-        snake_head.x = max(GRID_LEFT, snake_head.x - STEP)
+        newX = max(GRID_LEFT, head.x - STEP)
     elif direction == "RIGHT":
-        snake_head.x = min(GRID_LEFT + GRID_W - snake_head.width, snake_head.x + STEP)
+        newX = min(GRID_LEFT + GRID_W - head.width, head.x + STEP)
     elif direction == "UP":
-        snake_head.y = max(GRID_TOP, snake_head.y - STEP)
+        newY = max(GRID_TOP, head.y - STEP)
     elif direction == "DOWN":
-        snake_head.y = min(GRID_TOP + GRID_H - snake_head.height, snake_head.y + STEP)
+        newY = min(GRID_TOP + GRID_H - head.height, head.y + STEP)
+
+    # Update the snake
+    new_head = pygame.Rect(newX, newY, SNAKE_SIZE, SNAKE_SIZE)
+    snake = [new_head] + snake # Add the new head to the snake
+    snake.pop() # Remove the last rectangle from the snake
 
     # Draw background and grid outline
     screen.fill(BG)
     pygame.draw.rect(screen, GRID_OUTLINE, (GRID_LEFT, GRID_TOP, GRID_W, GRID_H), width=2)
 
-    # Draw snake head
-    pygame.draw.rect(screen, SNAKE_COLOR, snake_head)
+    # Draw the snake
+    for segment in snake:
+        pygame.draw.rect(screen, SNAKE_COLOR, segment) # Draw each segment of the snake
 
     pygame.display.flip() # Update the display
     clock.tick(2) # 2 frames per second
