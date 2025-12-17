@@ -41,6 +41,7 @@ x = GRID_LEFT + col_index * STEP # Calculate the x position of the snake head
 y = GRID_TOP + row_index * STEP # Calculate the y position of the snake head
 
 snake_head = pygame.Rect(x, y, SNAKE_SIZE, SNAKE_SIZE)
+direction = None
 
 # Game loop
 run = True
@@ -50,23 +51,32 @@ while run:
             pygame.quit()
             sys.exit()
 
-        # Snake movement (Move once per key press)
+        # Update direction
         if e.type == pygame.KEYDOWN:
-            STEP = 50
             if e.key == pygame.K_LEFT:
-                snake_head.x = max(GRID_LEFT, snake_head.x - STEP)
+                direction = "LEFT"
             elif e.key == pygame.K_RIGHT:
-                snake_head.x = min(GRID_LEFT + GRID_W - snake_head.width, snake_head.x + STEP)
+                direction = "RIGHT"
             elif e.key == pygame.K_UP:
-                snake_head.y = max(GRID_TOP, snake_head.y - STEP)
+                direction = "UP"
             elif e.key == pygame.K_DOWN:
-                snake_head.y = min(GRID_TOP + GRID_H - snake_head.height, snake_head.y + STEP)
+                direction = "DOWN"
+    
+    if direction == "LEFT":
+        snake_head.x = max(GRID_LEFT, snake_head.x - STEP)
+    elif direction == "RIGHT":
+        snake_head.x = min(GRID_LEFT + GRID_W - snake_head.width, snake_head.x + STEP)
+    elif direction == "UP":
+        snake_head.y = max(GRID_TOP, snake_head.y - STEP)
+    elif direction == "DOWN":
+        snake_head.y = min(GRID_TOP + GRID_H - snake_head.height, snake_head.y + STEP)
 
     # Draw background and grid outline
     screen.fill(BG)
     pygame.draw.rect(screen, GRID_OUTLINE, (GRID_LEFT, GRID_TOP, GRID_W, GRID_H), width=2)
+
     # Draw snake head
     pygame.draw.rect(screen, SNAKE_COLOR, snake_head)
 
-    pygame.display.flip()
-    clock.tick(60)
+    pygame.display.flip() # Update the display
+    clock.tick(2) # 2 frames per second
