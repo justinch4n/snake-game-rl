@@ -42,11 +42,13 @@ y = GRID_TOP + row_index * STEP # Calculate the y position of the snake head
 
 snake_head = pygame.Rect(x, y, SNAKE_SIZE, SNAKE_SIZE)
 direction = None
+
 # snake is a list of rectangles
 snake = [snake_head]
+
 # Add 3 more rectangles to the snake
 snake_length = 1
-while snake_length < 3:
+while snake_length < 5:
     snake_length += 1
     x = GRID_LEFT + col_index * STEP # Calculate the x position of the snake head
     y = GRID_TOP + row_index * STEP # Calculate the y position of the snake head
@@ -63,14 +65,18 @@ while run:
         # Update direction
         if e.type == pygame.KEYDOWN:
             if e.key == pygame.K_LEFT:
-                direction = "LEFT"
+                if direction != "RIGHT":
+                    direction = "LEFT"
             elif e.key == pygame.K_RIGHT:
-                direction = "RIGHT"
+                if direction != "LEFT":
+                    direction = "RIGHT"
             elif e.key == pygame.K_UP:
-                direction = "UP"
+                if direction != "DOWN":
+                    direction = "UP"
             elif e.key == pygame.K_DOWN:
-                direction = "DOWN"
-    
+                if direction != "UP":
+                    direction = "DOWN"
+
     head = snake[0]
     newX = head.x
     newY = head.y
@@ -87,6 +93,18 @@ while run:
 
     # Update the snake
     new_head = pygame.Rect(newX, newY, SNAKE_SIZE, SNAKE_SIZE)
+
+    if direction is not None:
+        # Check if the snake has hit the wall
+        if new_head.x < GRID_LEFT or new_head.x > GRID_LEFT + GRID_W - new_head.width or new_head.y < GRID_TOP or new_head.y > GRID_TOP + GRID_H - new_head.height:
+            pygame.quit()
+            sys.exit()
+
+        # Check if the snake has hit itself
+        if new_head in snake[1:]:
+            pygame.quit()
+            sys.exit()
+    
     snake = [new_head] + snake # Add the new head to the snake
     snake.pop() # Remove the last rectangle from the snake
 
@@ -99,4 +117,4 @@ while run:
         pygame.draw.rect(screen, SNAKE_COLOR, segment) # Draw each segment of the snake
 
     pygame.display.flip() # Update the display
-    clock.tick(2) # 2 frames per second
+    clock.tick(4) # 4 frames per second
