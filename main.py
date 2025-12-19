@@ -23,14 +23,19 @@ pygame.display.set_caption("Classic Snake Game")
 # Clock
 clock = pygame.time.Clock()
 
-#Playfield (lower part of the screen)
+# Playfield (lower part of the screen)
 GRID_W, GRID_H = 600, 600
 GRID_LEFT = (W - GRID_W) // 2
 GRID_TOP = H - GRID_H - 50
 
 # Snake configuration
 STEP = 50
-INITIAL_LENGTH = 5
+INITIAL_LENGTH = 143
+
+# Calculate total grid cells
+GRID_COLS = GRID_W // STEP
+GRID_ROWS = GRID_H // STEP
+TOTAL_GRID_CELLS = GRID_COLS * GRID_ROWS
 
 snake = Snake(
     grid_left=GRID_LEFT,
@@ -84,6 +89,7 @@ def play_again_display(final_score):
     yes_rect = pygame.Rect(yes_x, button_y, button_width, button_height)
     no_rect = pygame.Rect(no_x, button_y, button_width, button_height)
     
+    # Blocking loop until user clicks yes or no
     waiting = True
     while waiting:
         for e in pygame.event.get():
@@ -108,6 +114,61 @@ def play_again_display(final_score):
         text_rect3 = play_again_text.get_rect(center=(W // 2, H // 2 + 20))
         
         screen.blit(game_over_text, text_rect1)
+        screen.blit(score_text, text_rect2)
+        screen.blit(play_again_text, text_rect3)
+        
+        # Draw buttons
+        pygame.draw.rect(screen, (0, 200, 0), yes_rect)
+        pygame.draw.rect(screen, (200, 0, 0), no_rect)
+        
+        yes_text = font.render("Yes", True, (255, 255, 255))
+        no_text = font.render("No", True, (255, 255, 255))
+        
+        yes_text_rect = yes_text.get_rect(center=yes_rect.center)
+        no_text_rect = no_text.get_rect(center=no_rect.center)
+        
+        screen.blit(yes_text, yes_text_rect)
+        screen.blit(no_text, no_text_rect)
+        
+        pygame.display.flip()
+        clock.tick(60)
+
+# Show win dialog and return True if yes, False if no
+def win_display(final_score):
+    button_width = 150
+    button_height = 50
+    button_y = H // 2 + 80
+    yes_x = W // 2 - button_width - 20
+    no_x = W // 2 + 20
+    
+    yes_rect = pygame.Rect(yes_x, button_y, button_width, button_height)
+    no_rect = pygame.Rect(no_x, button_y, button_width, button_height)
+    
+    # Blocking loop until user clicks yes or no
+    waiting = True
+    while waiting:
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if e.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if yes_rect.collidepoint(mouse_pos):
+                    return True
+                elif no_rect.collidepoint(mouse_pos):
+                    return False
+        
+        # Draw dialog
+        screen.fill(BG)
+        win_text = large_font.render("You Win!", True, (255, 215, 0))
+        score_text = font.render(f"Final Score: {final_score}", True, (255, 255, 255))
+        play_again_text = font.render("Play Again?", True, (255, 255, 255))
+        
+        text_rect1 = win_text.get_rect(center=(W // 2, H // 2 - 80))
+        text_rect2 = score_text.get_rect(center=(W // 2, H // 2 - 30))
+        text_rect3 = play_again_text.get_rect(center=(W // 2, H // 2 + 20))
+        
+        screen.blit(win_text, text_rect1)
         screen.blit(score_text, text_rect2)
         screen.blit(play_again_text, text_rect3)
         
@@ -153,7 +214,19 @@ while run:
     apple_rect = pygame.Rect(apple.x, apple.y, apple.size, apple.size)
     if snake_head.colliderect(apple_rect):
         snake.grow()
-        apple.spawn_random()
+        # Check win condition: snake fills entire grid
+        if len(snake.segments) >= TOTAL_GRID_CELLS:
+            # Calculate final score
+            final_score = (len(snake.segments) - INITIAL_LENGTH) * 100
+            
+            # Show win dialog
+            if win_display(final_score):
+                reset_game()
+            else:
+                pygame.quit()
+                sys.exit()
+        else:
+            apple.spawn_random()
     
     # Calculate score based on snake length
     score = (len(snake.segments) - INITIAL_LENGTH) * 100
