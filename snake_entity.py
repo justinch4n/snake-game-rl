@@ -37,23 +37,44 @@ class Snake:
             self.segments.append(pygame.Rect(x, y, self.segment_size, self.segment_size))
 
         self.direction: str | None = None
+        self.next_direction: str | None = None  # Queued direction change
+        self.direction_locked = False  # Lock direction changes until next update
         self.alive = True
+        self.should_grow = False
 
-    # Update direction based on a key press
+    # Update direction based on a key press (queued for next update)
     def handle_key(self, key: int) -> None:
-        if key == pygame.K_LEFT and self.direction != "RIGHT":
-            self.direction = "LEFT"
-        elif key == pygame.K_RIGHT and self.direction != "LEFT":
-            self.direction = "RIGHT"
-        elif key == pygame.K_UP and self.direction != "DOWN":
-            self.direction = "UP"
-        elif key == pygame.K_DOWN and self.direction != "UP":
-            self.direction = "DOWN"
+        # If direction is already queued for this update cycle, ignore new input
+        if self.direction_locked:
+            return
+        
+        # Check against actual current direction, not queued direction
+        if key == pygame.K_LEFT:
+            if self.direction != "RIGHT":
+                self.next_direction = "LEFT"
+                self.direction_locked = True
+        elif key == pygame.K_RIGHT:
+            if self.direction != "LEFT":
+                self.next_direction = "RIGHT"
+                self.direction_locked = True
+        elif key == pygame.K_UP:
+            if self.direction != "DOWN":
+                self.next_direction = "UP"
+                self.direction_locked = True
+        elif key == pygame.K_DOWN:
+            if self.direction != "UP":
+                self.next_direction = "DOWN"
+                self.direction_locked = True
 
     # Advance the snake one step
     def update(self) -> bool:
         if not self.alive:
             return False
+
+        # Apply queued direction change (only one per update)
+        if self.next_direction is not None:
+            self.direction = self.next_direction
+            self.next_direction = None
 
         head = self.segments[0]
         new_x, new_y = head.x, head.y
@@ -88,8 +109,18 @@ class Snake:
 
         # Update the snake's position
         self.segments = [new_head] + self.segments
-        self.segments.pop()
+        if not self.should_grow:
+            self.segments.pop()
+        else:
+            self.should_grow = False
+        
+        # Unlock direction changes after movement is complete
+        self.direction_locked = False
         return True
+
+    # Grow the snake by one segment
+    def grow(self) -> None:
+        self.should_grow = True
 
     # Draw the snake
     def draw(self, surface: pygame.Surface, color: tuple[int, int, int]) -> None:
