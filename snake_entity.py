@@ -42,7 +42,7 @@ class Snake:
         self.alive = True
         self.should_grow = False
 
-    # Update direction based on a key press (queued for next update)
+    # Update direction based on a key press
     def handle_key(self, key: int) -> None:
         # If direction is already queued for this update cycle, ignore new input
         if self.direction_locked:
@@ -71,7 +71,7 @@ class Snake:
         if not self.alive:
             return False
 
-        # Apply queued direction change (only one per update)
+        # Apply queued direction change
         if self.next_direction is not None:
             self.direction = self.next_direction
             self.next_direction = None

@@ -23,7 +23,7 @@ pygame.display.set_caption("Classic Snake Game")
 # Clock
 clock = pygame.time.Clock()
 
-# Bottom playfield: 600x600 grid constrained area
+#Playfield (lower part of the screen)
 GRID_W, GRID_H = 600, 600
 GRID_LEFT = (W - GRID_W) // 2
 GRID_TOP = H - GRID_H - 50
@@ -77,7 +77,7 @@ while run:
         screen.blit(score_text, text_rect2)
         pygame.display.flip()
         
-        # Wait a bit before quitting
+        # Wait before quitting
         pygame.time.wait(3000)
         pygame.quit()
         sys.exit()
@@ -102,7 +102,7 @@ while run:
     # Draw the snake
     snake.draw(screen, SNAKE_COLOR)
     
-    # Draw the score
+    # Draw the score at the top
     score_text = font.render(f"Score: {score}", True, (255, 255, 255))
     screen.blit(score_text, (20, 20))
 
