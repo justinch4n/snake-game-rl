@@ -1,8 +1,8 @@
 import sys
 import pygame
 from pygame.locals import *
-from snake_entity import Snake
-from apple_entity import Apple
+from entitySnake import Snake
+from entityApple import Apple
 
 # Init pygame
 pygame.init() 
