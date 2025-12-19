@@ -226,7 +226,7 @@ while run:
                 pygame.quit()
                 sys.exit()
         else:
-            apple.spawn_random()
+            apple.spawn_random(snake.segments)
     
     # Calculate score based on snake length
     score = (len(snake.segments) - INITIAL_LENGTH) * 100
