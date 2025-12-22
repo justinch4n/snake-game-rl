@@ -1,18 +1,9 @@
 """
 Gymnasium environment for Snake game with feature-based state representation.
-
-TODO: Implement a Gymnasium environment that:
-1. Wraps the Snake game (entitySnake.py, entityApple.py)
-2. Provides 11-dimensional feature-based observations
-3. Defines action space (4 discrete actions: UP, DOWN, LEFT, RIGHT)
-4. Implements reward function
-5. Handles episode termination/truncation
-6. Supports rendering with pygame
 """
 import numpy as np  # for numerical operations
 import gymnasium as gym  # for gymnasium environment
 from gymnasium import spaces  # for action and observation spaces
-import pygame  # for rendering
 from typing import Tuple, Dict, Any  # for type hints
 import sys  # for system operations
 import os  # for file operations
@@ -39,10 +30,7 @@ class SnakeEnv(gym.Env):
     - 1: DOWN
     - 2: LEFT
     - 3: RIGHT
-    """
-    
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
-    
+    """    
     # Initialize snake environment
     def __init__(
         self,
@@ -78,12 +66,6 @@ class SnakeEnv(gym.Env):
         
         # Define observation space (11 features, range [-1, 1])
         self.observation_space = spaces.Box(-1, 1, shape=(11,))
-        
-        # Initialize pygame variables
-        self.render_mode = None # Rendering mode: "human" for pygame window, "rgb_array" for image, None for no rendering
-        self.window = None # Pygame window
-        self.clock = None # Pygame clock
-        self.screen = None # Pygame screen
         
         # Initialize game state variables
         self.snake = None # Snake entity
@@ -186,3 +168,106 @@ class SnakeEnv(gym.Env):
         # No collision
         return False
     
+
+    
+    # Get additional info
+    def _get_info(self) -> Dict[str, Any]:
+        """
+        Returns dict with score, snake_length, steps_without_food
+        """
+        # Return info dictionary
+        return {
+             "score": self.score,
+             "snake_length": len(self.snake.segments) if self.snake else 0,
+             "steps_without_food": self.steps_without_food,
+        }
+        
+
+
+    # Reset the environment to initial state
+    def reset(self, seed: int | None = None) -> Tuple[np.ndarray, Dict[str, Any]]:
+        """
+        Returns initial observation and info
+        
+        Args:
+            seed: Random seed for reproducibility
+        """
+        super().reset(seed=seed)
+        
+        # Initialize Snake
+        self.snake = Snake(self.grid_width, self.grid_height, self.step_size, self.initial_length)
+        
+        # Initialize Apple
+        self.apple = Apple(self.grid_left, self.grid_top, self.grid_width, self.grid_height, self.cell_size, self.size)
+        
+        # Spawn apple in valid position (not on snake)
+        self.apple.spawn_random(self.snake.segments)
+        
+        # Set tracking variables
+        self.score = 0
+        self.steps_without_food = 0
+        
+        # Return observation and info
+        return self._get_obs(), self._get_info()
+        
+
+    
+    # Execute one step in the environment
+    def step(self, action: int) -> Tuple[np.ndarray, float, bool, bool, Dict[str, Any]]:
+        """
+        Returns new observation, reward, terminated, truncated, info
+        
+        Args: action: 0=UP, 1=DOWN, 2=LEFT, 3=RIGHT
+        """
+        # Convert action to int if it's a numpy array
+        if isinstance(action, np.ndarray):
+            action = int(action.item())
+        else:
+            action = int(action)
+        
+        # Convert action to direction string
+        action_to_direction = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
+        direction = action_to_direction[action]
+        
+        # Set snake direction (prevent 180-degree turns)
+        self.snake.direction_locked = False
+        opposites = {"UP": "DOWN", "DOWN": "UP", "LEFT": "RIGHT", "RIGHT": "LEFT"}
+        
+        if self.snake.direction is None:
+            self.snake.direction = direction
+        elif direction != opposites[self.snake.direction]:
+            self.snake.next_direction = direction
+            self.snake.direction_locked = True
+        
+        # Update snake and check if alive
+        alive = self.snake.update()
+        
+        # Initialize reward and termination flags
+        reward = 0.0 # Reward for the action
+        terminated = False # Episode ended (snake died or won)
+        truncated = False # Episode ended to timeout
+        
+        # Calculate reward based on outcome
+        if not alive:
+            reward = -1.0 # Negative reward for dying
+            terminated = True # Episode ended (snake died)
+
+        elif self.apple.x == self.snake.segments[0].x and self.apple.y == self.snake.segments[0].y:
+            reward = 1.0 # Positive reward for eating apple
+            self.snake.grow() # Grow snake
+            self.apple.spawn_random(self.snake.segments) # Spawn new apple
+
+        elif len(self.snake.segments) == self.grid_cols * self.grid_rows:
+            reward = 10.0 # Bonus reward for winning (filled grid)
+            terminated = True # Episode ended (snake won)
+
+        else:
+            reward = -0.05 # Small negative reward per step
+            self.steps_without_food += 1 # Increment steps without food
+        
+        # Get new observation and info
+        observation = self._get_obs()
+        info = self._get_info()
+        
+        # Return new observation, reward, terminated, truncated, info
+        return observation, reward, terminated, truncated, info
