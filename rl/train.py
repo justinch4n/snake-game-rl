@@ -45,16 +45,22 @@ def main():
         "MlpPolicy",  # Multi-layer perceptron policy
         env,
         learning_rate=1e-4,
-        learning_starts=1000,  # Steps before learning starts for diverse sampling
-        batch_size=32,  # Batch size for training
-        tensorboard_log="rl/tensorboard_logs/" # for logging rewards and losses
+        learning_starts=1000, # Steps before learning starts
+        batch_size=32, # Batch size for training
+        tensorboard_log="tensorboard_logs/", # for logging rewards and losses
+        gamma=0.99, # Discount factor for future rewards
+        buffer_size=100_000, # Replay buffer size
+        exploration_fraction=0.2,   # Exploration phase fraction
+        exploration_initial_eps=1.0, # Initial exploration rate
+        exploration_final_eps=0.05, # Final exploration rate
+
     )
     
     # Set up callbacks
     eval_callback = EvalCallback(
         eval_env,
-        best_model_save_path="rl/models/best/",
-        log_path="rl/logs/eval/",
+        best_model_save_path="models/best/",
+        log_path=log_dir + "eval/",
         eval_freq=5000,  # Evaluate every N steps
         deterministic=True,
         render=False,
@@ -62,7 +68,7 @@ def main():
     
     checkpoint_callback = CheckpointCallback(
         save_freq=10000,  # Save checkpoint every N steps
-        save_path="rl/models/checkpoints/",
+        save_path="models/checkpoints/",
         name_prefix="snake_dqn",
     )
     
@@ -75,8 +81,8 @@ def main():
     )
     
     # Save final model
-    model.save("rl/models/snake_dqn_final")
-    print("Training complete! Model saved to rl/models/snake_dqn_final")
+    model.save("models/snake_dqn_final")
+    print("Training complete! Model saved to models/snake_dqn_final")
 
 if __name__ == "__main__":
     main()
