@@ -272,8 +272,9 @@ class SnakeEnv(gym.Env):
             terminated = True # Episode ended (snake died)
 
         elif self.apple.x == self.snake.segments[0].x and self.apple.y == self.snake.segments[0].y:
-            reward = 1.0 # Positive reward for eating apple
+            reward = 5.0 # Positive reward for eating apple
             self.snake.grow() # Grow snake
+            self.score += 100 # Increment score (100 points per apple)
             self.apple.spawn_random(self.snake.segments) # Spawn new apple
             self.steps_without_food = 0 # Reset counter
 
@@ -287,7 +288,7 @@ class SnakeEnv(gym.Env):
             
             # Truncate if too many steps without food
             if self.steps_without_food >= self.max_steps_without_food:
-                reward = -5.0 # Penalty for inefficiency
+                reward = -10.0 # Penalty for inefficiency
                 truncated = True
         
         # Get new observation and info
