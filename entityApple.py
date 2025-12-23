@@ -19,10 +19,12 @@ class Apple:
         self.cell_size = cell_size
         self.size = size
 
-        # Spawn the apple at a random position
-        self.spawn_random()
+        # Spawn the apple at a random position (without snake segments initially)
+        self.spawn_random([])
 
-    def spawn_random(self, snake_segments: list[tuple[int, int]]) -> None:
+    def spawn_random(self, snake_segments: list = None) -> None:
+        if snake_segments is None:
+            snake_segments = []
         cols = self.grid_width // self.cell_size
         rows = self.grid_height // self.cell_size
 
