@@ -1,13 +1,5 @@
 """
 Training script for Snake RL agent using DQN.
-
-TODO: Implement training script that:
-1. Creates and wraps the environment with Monitor for logging
-2. Creates a DQN agent from stable-baselines3
-3. Sets up callbacks (evaluation, checkpointing)
-4. Trains the agent
-5. Saves the final model
-6. Optionally tests the trained agent
 """
 from typing import Any
 
