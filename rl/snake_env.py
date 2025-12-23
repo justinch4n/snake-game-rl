@@ -195,10 +195,24 @@ class SnakeEnv(gym.Env):
         super().reset(seed=seed)
         
         # Initialize Snake
-        self.snake = Snake(self.grid_width, self.grid_height, self.step_size, self.initial_length)
+        self.snake = Snake(
+            grid_left=self.grid_left,
+            grid_top=self.grid_top,
+            grid_width=self.grid_width,
+            grid_height=self.grid_height,
+            step=self.step_size,
+            initial_length=self.initial_length,
+        )
         
         # Initialize Apple
-        self.apple = Apple(self.grid_left, self.grid_top, self.grid_width, self.grid_height, self.cell_size, self.size)
+        self.apple = Apple(
+            grid_left=self.grid_left,
+            grid_top=self.grid_top,
+            grid_width=self.grid_width,
+            grid_height=self.grid_height,
+            cell_size=self.step_size,
+            size=self.step_size,
+        )
         
         # Spawn apple in valid position (not on snake)
         self.apple.spawn_random(self.snake.segments)
