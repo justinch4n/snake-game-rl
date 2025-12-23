@@ -72,6 +72,7 @@ class SnakeEnv(gym.Env):
         self.apple = None # Apple entity
         self.score = 0 # Score
         self.steps_without_food = 0 # Steps without food
+        self.max_steps_without_food = 1000 # Prevent infinite games
     
 
 
@@ -220,6 +221,7 @@ class SnakeEnv(gym.Env):
         # Set tracking variables
         self.score = 0
         self.steps_without_food = 0
+        self.episode_steps = 0
         
         # Return observation and info
         return self._get_obs(), self._get_info()
@@ -256,6 +258,9 @@ class SnakeEnv(gym.Env):
         # Update snake and check if alive
         alive = self.snake.update()
         
+        # Increment episode step counter
+        self.episode_steps += 1
+        
         # Initialize reward and termination flags
         reward = 0.0 # Reward for the action
         terminated = False # Episode ended (snake died or won)
@@ -270,6 +275,7 @@ class SnakeEnv(gym.Env):
             reward = 1.0 # Positive reward for eating apple
             self.snake.grow() # Grow snake
             self.apple.spawn_random(self.snake.segments) # Spawn new apple
+            self.steps_without_food = 0 # Reset counter
 
         elif len(self.snake.segments) == self.grid_cols * self.grid_rows:
             reward = 10.0 # Bonus reward for winning (filled grid)
@@ -278,6 +284,11 @@ class SnakeEnv(gym.Env):
         else:
             reward = -0.05 # Small negative reward per step
             self.steps_without_food += 1 # Increment steps without food
+            
+            # Truncate if too many steps without food
+            if self.steps_without_food >= self.max_steps_without_food:
+                reward = -5.0 # Penalty for inefficiency
+                truncated = True
         
         # Get new observation and info
         observation = self._get_obs()
