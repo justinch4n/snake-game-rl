@@ -1,4 +1,5 @@
 # Snake Game Reinforced Learning
+
 I made the classic snake game built with Pygame. You can control the snake with arrow keys to eat apples and grow longer while avoiding the barrier and self collision.
 
 ## Features
@@ -21,7 +22,6 @@ I made the classic snake game built with Pygame. You can control the snake with 
 - Log and visualize training progress with TensorBoard
 - Play the game using a trained model or random agent with `rl/play_rl.py`
 
-
 ## Requirements
 
 - Python 3.x
@@ -31,7 +31,6 @@ I made the classic snake game built with Pygame. You can control the snake with 
 - numpy
 - torch
 - tqdm
-
 
 ## Setup
 
@@ -116,9 +115,25 @@ This project uses a DQN (Deep Q Network) agent. It's an RL algorithm that uses a
 - **Q Function**: Learns to predict the expected future reward for each action in a given state
 - **Experience Replay**: Stores past experiences (state, action, reward, next state) in a buffer and learns from random batches
 - **Target Network**: Uses a separate network for stable learning
-- **Exploration vs Exploitation**:
-  - Starts with high exploration (ε=1.0, mostly random actions)
-  - Gradually shifts to exploitation (ε=0.05, uses learned policy)
+- **Exploration vs Exploitation (Epsilon-Greedy Strategy)**:
+  - **Epsilon**: The exploration rate is the probability of taking a random action instead of using the learned policy
+  - **High epsilon (epsilon=1.0)**: Agent explores randomly to discover new strategies
+  - **Low epsilon (epsilon=0.05)**: Agent exploits learned knowledge, taking the best action most of the time
+  - **Epsilon annealing**: Gradually decreases epsilon during training (from 1.0 to 0.05) to transition from exploration to exploitation
+  - Starts with high exploration (epsilon=1.0, 100% random actions)
+  - Gradually shifts to exploitation (epsilon=0.05, 95% learned policy, 5% random)
+
+**Hyperparameters:**
+
+- `learning_rate`: How quickly the network parameters are updated during learning
+- `learning_starts`: How many steps are taken randomly before the agent starts learning (for initial experience gathering)
+- `batch_size`: Number of experiences sampled from the replay buffer for each learning update
+- `tensorboard_log`: Directory to save logs for analyzing training progress in TensorBoard
+- `gamma`: Discount factor for future rewards (close to 1.0 means future rewards are highly valued)
+- `buffer_size`: Maximum number of experiences stored in the replay buffer
+- `exploration_fraction`: Fraction of total training steps during which epsilon decreases linearly
+- `exploration_initial_eps`: Starting epsilon value
+- `exploration_final_eps`: Ending epsilon value 
 
 #### Monitor
 
