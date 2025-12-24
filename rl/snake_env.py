@@ -38,6 +38,7 @@ class SnakeEnv(gym.Env):
         grid_height: int = 600,
         step_size: int = 50,
         initial_length: int = 5,
+        render_mode: str | None = None,
     ):
         # Initialize superclass gym
         super().__init__()
@@ -55,17 +56,24 @@ class SnakeEnv(gym.Env):
         # Max distance is the diagonal of the grid and used for normalization
         self.max_distance = math.sqrt(grid_width**2 + grid_height**2)
         
-        # Grid boundaries (top left corner at 0,0)  
-        self.grid_left = 0
-        self.grid_top = 0
-        self.grid_right = grid_width
-        self.grid_bottom = grid_height
+        # Grid boundaries (centered in 700x700 window, matching main.py)
+        WINDOW_SIZE = 700
+        self.grid_left = (WINDOW_SIZE - grid_width) // 2  # Centered horizontally
+        self.grid_top = WINDOW_SIZE - grid_height - 50  # 50px from bottom
+        self.grid_right = self.grid_left + grid_width
+        self.grid_bottom = self.grid_top + grid_height
         
         # Define action space (4 possible moves aka the directions)
         self.action_space = spaces.Discrete(4)
         
         # Define observation space (11 features, range [-1, 1])
         self.observation_space = spaces.Box(-1, 1, shape=(11,))
+        
+        # Rendering
+        self.render_mode = render_mode
+        self.window = None
+        self.clock = None
+        self.screen = None
         
         # Initialize game state variables
         self.snake = None # Snake entity
@@ -223,8 +231,16 @@ class SnakeEnv(gym.Env):
         self.steps_without_food = 0
         self.episode_steps = 0
         
+        # Get initial observation and info
+        observation = self._get_obs()
+        info = self._get_info()
+        
+        # Render if needed
+        if self.render_mode == "human":
+            self._render_frame()
+        
         # Return observation and info
-        return self._get_obs(), self._get_info()
+        return observation, info
         
 
     
@@ -268,7 +284,7 @@ class SnakeEnv(gym.Env):
         
         # Calculate reward based on outcome
         if not alive:
-            reward = -1.0 # Negative reward for dying
+            reward = -30.0 # Negative reward for dying
             terminated = True # Episode ended (snake died)
 
         elif self.apple.x == self.snake.segments[0].x and self.apple.y == self.snake.segments[0].y:
@@ -279,11 +295,11 @@ class SnakeEnv(gym.Env):
             self.steps_without_food = 0 # Reset counter
 
         elif len(self.snake.segments) == self.grid_cols * self.grid_rows:
-            reward = 10.0 # Bonus reward for winning (filled grid)
+            reward = 100.0 # Bonus reward for winning (filled grid)
             terminated = True # Episode ended (snake won)
 
         else:
-            reward = -0.05 # Small negative reward per step
+            reward = -0.25 # Small negative reward per step
             self.steps_without_food += 1 # Increment steps without food
             
             # Truncate if too many steps without food
@@ -295,5 +311,78 @@ class SnakeEnv(gym.Env):
         observation = self._get_obs()
         info = self._get_info()
         
+        # Render if needed
+        if self.render_mode == "human":
+            self._render_frame()
+        
         # Return new observation, reward, terminated, truncated, info
         return observation, reward, terminated, truncated, info
+    
+    # Render the environment
+    def render(self):
+        if self.render_mode == "rgb_array":
+            return self._render_frame()
+    
+    # Render a frame using pygame
+    def _render_frame(self):
+        if self.render_mode is None:
+            return
+        
+        import pygame
+        
+        if self.window is None and self.render_mode == "human":
+            pygame.init()
+            pygame.display.init()
+            self.window = pygame.display.set_mode((700, 700))
+            pygame.display.set_caption("Snake RL - Playing")
+        
+        if self.clock is None and self.render_mode == "human":
+            self.clock = pygame.time.Clock()
+        
+        if self.screen is None:
+            self.screen = pygame.Surface((700, 700))
+        
+        # Colors
+        BG = (0, 0, 0)
+        SNAKE_COLOR = (36, 140, 15)
+        APPLE_COLOR = (255, 0, 0)
+        GRID_OUTLINE = (60, 60, 60)
+        
+        # Draw background
+        self.screen.fill(BG)
+        pygame.draw.rect(
+            self.screen,
+            GRID_OUTLINE,
+            (self.grid_left, self.grid_top, self.grid_width, self.grid_height),
+            width=2,
+        )
+        
+        # Draw apple
+        if self.apple:
+            self.apple.draw(self.screen, APPLE_COLOR)
+        
+        # Draw snake
+        if self.snake:
+            self.snake.draw(self.screen, SNAKE_COLOR)
+        
+        # Draw score
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Score: {self.score}", True, (255, 255, 255))
+        self.screen.blit(score_text, (20, 20))
+        
+        if self.render_mode == "human":
+            self.window.blit(self.screen, self.window.get_rect())
+            pygame.event.pump()
+            pygame.display.update()
+            self.clock.tick(10)  # 10 FPS for play (faster than training)
+        else:  # rgb_array
+            return np.transpose(
+                np.array(pygame.surfarray.pixels3d(self.screen)), axes=(1, 0, 2)
+            )
+    
+    # Clean up resources
+    def close(self):
+        if self.window is not None:
+            import pygame
+            pygame.display.quit()
+            pygame.quit()

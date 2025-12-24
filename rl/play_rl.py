@@ -77,17 +77,19 @@ def play_with_model(env, model_path, num_episodes=1):
 # Main function to parse arguments and run play
 def main():
     # Set up argument parser
-    parser = argparse.ArgumentParser(description="nake with RL agent")
+    parser = argparse.ArgumentParser(description="Snake with RL agent")
     parser.add_argument("--model", type=str, default=None, help="Path to trained model")
     parser.add_argument("--episodes", type=int, default=1, help="Number of episodes")
+    parser.add_argument("--headless", action="store_true", help="Run without rendering (faster)")
     args = parser.parse_args()
 
-    # Initialize environment
+    # Initialize environment with rendering (unless headless)
     env = SnakeEnv(
         grid_width=600,
         grid_height=600,
         step_size=50,
         initial_length=5,
+        render_mode=None if args.headless else "human",  # Render by default
     )
     
     # Play with model or random

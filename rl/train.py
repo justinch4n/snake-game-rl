@@ -36,6 +36,7 @@ def main():
         grid_height=600,
         step_size=50,
         initial_length=5,
+        render_mode=None,
     )
     # Wrap with Monitor for logging
     eval_env = Monitor[Any, Any](eval_env, log_dir + "eval/")
@@ -75,7 +76,7 @@ def main():
     # Train the agent
     print("Starting training...")
     model.learn(
-        total_timesteps=500000,  # Total training steps
+        total_timesteps=5000000,  # Total training steps
         callback=[eval_callback, checkpoint_callback],
         progress_bar=True,
     )
